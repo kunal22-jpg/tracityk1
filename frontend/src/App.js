@@ -1,51 +1,50 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
+import Dashboard from './components/Dashboard';
+import DataExplorer from './components/DataExplorer';
+import Navbar from './components/Navbar';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+function App() {
+  const [stats, setStats] = useState({
+    total_visualizations: 7000,
+    total_users: 12000,
+    total_datasets: 5,
+    total_insights: 2500
+  });
 
   useEffect(() => {
-    helloWorldApi();
+    // Fetch platform stats
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/stats`);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+    // Refresh stats every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
-
-function App() {
-  return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <div className="min-h-screen bg-slate-900 text-slate-100">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Dashboard stats={stats} />} />
+            <Route path="/explorer" element={<DataExplorer />} />
+          </Routes>
+        </div>
       </BrowserRouter>
     </div>
   );
