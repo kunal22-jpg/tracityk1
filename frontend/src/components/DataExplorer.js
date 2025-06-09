@@ -52,6 +52,9 @@ const DataExplorer = () => {
       }
     } catch (error) {
       console.error('Error fetching visualization data:', error);
+      // Set default data to prevent infinite loading
+      setVisualizationData({ data: [], chart_recommendations: { recommended: 'bar' } });
+      setInsights({ insights: { insight: 'Unable to load insights at this time.' } });
     } finally {
       setLoading(false);
     }
