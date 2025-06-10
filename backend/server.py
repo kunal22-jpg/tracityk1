@@ -588,16 +588,60 @@ async def chat_with_ai(query: ChatQuery):
         }
 
 @api_router.get("/visualize/{collection_name}")
-async def get_visualization_data(collection_name: str, limit: int = 20):
-    """Get data for visualization from specific collection"""
+async def get_visualization_data(collection_name: str, limit: int = 50, states: str = None, years: str = None):
+    """Get data for visualization from specific collection with optional filtering"""
     try:
         # Verify collection exists
         collections = await db.list_collection_names()
         if collection_name not in collections:
             raise HTTPException(status_code=404, detail="Collection not found")
         
+        # Build query based on optional filters
+        query = {}
+        if states:
+            state_list = [s.strip() for s in states.split(',') if s.strip()]
+            if state_list:
+                query["state"] = {"$in": state_list}
+        
+        if years:
+            year_list = []
+            try:
+                year_list = [int(y.strip()) for y in years.split(',') if y.strip()]
+            except ValueError:
+                pass  # Ignore invalid years
+            
+            if year_list:
+                if collection_name == "covid_stats":
+                    # For COVID data, filter by year from date field
+                    year_filters = []
+                    for year in year_list:
+                        year_filters.append({"date": {"$regex": f"^{year}-"}})
+                    if year_filters:
+                        query["$or"] = year_filters
+                else:
+                    query["year"] = {"$in": year_list}
+        
+        # If no filters provided, try to get a representative sample from all states
+        if not query:
+            # Get all states first
+            all_states = await db[collection_name].distinct("state")
+            # For better visualization, limit to top 10-15 states and get recent data
+            if collection_name != "covid_stats":
+                # Get latest year available
+                latest_years = await db[collection_name].distinct("year")
+                if latest_years:
+                    latest_year = max(latest_years)
+                    query = {"year": latest_year}
+            else:
+                # For COVID data, get recent data
+                query = {"date": {"$regex": "^202[0-3]"}}
+        
         # Get data
-        data = await db[collection_name].find().limit(limit).to_list(limit)
+        data = await db[collection_name].find(query).limit(limit).to_list(limit)
+        
+        # If still no data and filters were applied, try without filters
+        if not data and (states or years):
+            data = await db[collection_name].find().limit(limit).to_list(limit)
         
         # Process data for frontend
         processed_data = []
@@ -612,15 +656,24 @@ async def get_visualization_data(collection_name: str, limit: int = 20):
         # Get chart recommendations
         chart_rec = await get_chart_recommendations(processed_data)
         
-        # Generate AI insights
-        ai_insights = await get_openai_insight(processed_data, f"Analyze the {collection_name} dataset")
+        # Generate AI insights using enhanced method
+        ai_insights = await get_enhanced_web_insights(
+            processed_data, 
+            collection_name, 
+            f"Analyze the {collection_name} dataset patterns and trends"
+        )
+        
+        # Get metadata for context
+        metadata = await get_collection_metadata(collection_name)
         
         return {
             "collection": collection_name,
             "data": processed_data,
             "chart_recommendations": chart_rec,
             "ai_insights": ai_insights,
-            "total_records": len(processed_data)
+            "total_records": len(processed_data),
+            "metadata": metadata.dict(),
+            "query_used": query
         }
         
     except HTTPException:
