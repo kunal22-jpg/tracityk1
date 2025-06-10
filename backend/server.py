@@ -683,29 +683,62 @@ async def get_visualization_data(collection_name: str, limit: int = 50, states: 
         raise HTTPException(status_code=500, detail="Error processing visualization data")
 
 @api_router.get("/insights/{collection_name}")
-async def get_dataset_insights(collection_name: str):
-    """Get AI-generated insights for a specific dataset"""
+async def get_dataset_insights(collection_name: str, states: str = None, years: str = None):
+    """Get AI-generated insights for a specific dataset with optional filtering"""
     try:
+        # Build query based on optional filters
+        query = {}
+        if states:
+            state_list = [s.strip() for s in states.split(',') if s.strip()]
+            if state_list:
+                query["state"] = {"$in": state_list}
+        
+        if years:
+            year_list = []
+            try:
+                year_list = [int(y.strip()) for y in years.split(',') if y.strip()]
+            except ValueError:
+                pass
+            
+            if year_list:
+                if collection_name == "covid_stats":
+                    year_filters = []
+                    for year in year_list:
+                        year_filters.append({"date": {"$regex": f"^{year}-"}})
+                    if year_filters:
+                        query["$or"] = year_filters
+                else:
+                    query["year"] = {"$in": year_list}
+        
         # Get sample data
-        sample_data = await db[collection_name].find().limit(20).to_list(20)
+        sample_data = await db[collection_name].find(query).limit(50).to_list(50)
         
         if not sample_data:
-            raise HTTPException(status_code=404, detail="No data found in collection")
+            raise HTTPException(status_code=404, detail="No data found for the specified criteria")
         
-        # Generate comprehensive insights
-        insights = await get_openai_insight(
+        # Generate comprehensive insights using enhanced method
+        insights = await get_enhanced_web_insights(
             sample_data, 
+            collection_name, 
             f"Provide comprehensive analysis of the {collection_name} dataset including trends, patterns, and key findings"
         )
         
         # Calculate basic statistics
-        total_records = await db[collection_name].count_documents({})
+        total_records = await db[collection_name].count_documents(query if query else {})
+        
+        # Get metadata
+        metadata = await get_collection_metadata(collection_name)
         
         return {
             "collection": collection_name,
             "total_records": total_records,
             "insights": insights,
             "sample_size": len(sample_data),
+            "metadata": metadata.dict(),
+            "applied_filters": {
+                "states": states.split(',') if states else None,
+                "years": years.split(',') if years else None
+            },
             "generated_at": datetime.utcnow().isoformat()
         }
         
