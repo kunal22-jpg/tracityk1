@@ -239,7 +239,11 @@ test_plan:
     - "Enhanced DataExplorer component with advanced filtering"
     - "Advanced filtering UI with multi-select capabilities"
     - "Enhanced visualization display for all states"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Enhanced DataExplorer component with advanced filtering"
+    - "Advanced filtering UI with multi-select capabilities"
+    - "Enhanced visualization display for all states"
+    - "Enhanced AI insights display with rich information"
   test_all: true
   test_priority: "high_first"
 
