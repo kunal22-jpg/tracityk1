@@ -232,20 +232,21 @@ const DataExplorer = () => {
           className="text-center mb-8"
         >
           <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-4">
-            Data Explorer
+            Enhanced Data Explorer
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Dive deep into your datasets with interactive visualizations and AI-powered insights
+            Advanced filtering and AI-powered insights for comprehensive data analysis across all Indian states
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Dataset Selection Sidebar */}
+          {/* Enhanced Filtering Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-1"
+            className="lg:col-span-1 space-y-6"
           >
+            {/* Dataset Selection */}
             <div className="bento-card">
               <h2 className="text-lg font-semibold mb-4">Select Dataset</h2>
               <div className="space-y-2">
@@ -268,8 +269,220 @@ const DataExplorer = () => {
               </div>
             </div>
 
+            {/* States Filter */}
+            {metadata && metadata.available_states.length > 0 && (
+              <div className="bento-card">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">States</h3>
+                  <span className="text-xs text-slate-400">
+                    {selectedStates.length} selected
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    onClick={() => setSelectedStates(metadata.available_states)}
+                    className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded hover:bg-blue-600/30"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedStates([])}
+                    className="text-xs bg-red-600/20 text-red-300 px-2 py-1 rounded hover:bg-red-600/30"
+                  >
+                    Clear
+                  </button>
+                </div>
+                
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {metadata.available_states.map((state) => (
+                    <label
+                      key={state}
+                      className="flex items-center p-2 hover:bg-slate-700/30 rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedStates.includes(state)}
+                        onChange={() => handleStateToggle(state)}
+                        className="mr-2 rounded"
+                      />
+                      <span className="text-sm">{state}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Years Filter */}
+            {metadata && metadata.available_years.length > 0 && (
+              <div className="bento-card">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Years</h3>
+                  <span className="text-xs text-slate-400">
+                    {selectedYears.length} selected
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    onClick={() => setSelectedYears(metadata.available_years)}
+                    className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded hover:bg-blue-600/30"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedYears([])}
+                    className="text-xs bg-red-600/20 text-red-300 px-2 py-1 rounded hover:bg-red-600/30"
+                  >
+                    Clear
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+                  {metadata.available_years.map((year) => (
+                    <label
+                      key={year}
+                      className="flex items-center p-1 hover:bg-slate-700/30 rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedYears.includes(year)}
+                        onChange={() => handleYearToggle(year)}
+                        className="mr-1 rounded text-xs"
+                      />
+                      <span className="text-xs">{year}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Crime Types Filter (for crimes collection) */}
+            {metadata && metadata.special_filters.crime_types && (
+              <div className="bento-card">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Crime Types</h3>
+                  <span className="text-xs text-slate-400">
+                    {selectedCrimeTypes.length} selected
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    onClick={() => setSelectedCrimeTypes(metadata.special_filters.crime_types)}
+                    className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded hover:bg-blue-600/30"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedCrimeTypes([])}
+                    className="text-xs bg-red-600/20 text-red-300 px-2 py-1 rounded hover:bg-red-600/30"
+                  >
+                    Clear
+                  </button>
+                </div>
+                
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {metadata.special_filters.crime_types.map((crimeType) => (
+                    <label
+                      key={crimeType}
+                      className="flex items-center p-2 hover:bg-slate-700/30 rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCrimeTypes.includes(crimeType)}
+                        onChange={() => handleCrimeTypeToggle(crimeType)}
+                        className="mr-2 rounded"
+                      />
+                      <span className="text-sm">{crimeType}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sorting Options */}
+            {metadata && metadata.available_fields.length > 0 && (
+              <div className="bento-card">
+                <h3 className="text-lg font-semibold mb-4">Sort Options</h3>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Sort By</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded px-3 py-2 text-sm"
+                    >
+                      <option value="">-- Select Field --</option>
+                      {metadata.available_fields.map((field) => (
+                        <option key={field} value={field}>
+                          {field.replace('_', ' ').toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Order</label>
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded px-3 py-2 text-sm"
+                    >
+                      <option value="asc">Ascending</option>
+                      <option value="desc">Descending</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="bento-card">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showAllStates}
+                      onChange={(e) => setShowAllStates(e.target.checked)}
+                      className="mr-2 rounded"
+                    />
+                    <span className="text-sm">Show All States</span>
+                  </label>
+                </div>
+                
+                <button
+                  onClick={fetchFilteredData}
+                  disabled={isFiltering}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 disabled:transform-none"
+                >
+                  {isFiltering ? (
+                    <div className="flex items-center justify-center">
+                      <div className="loading-dots mr-2">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                      Filtering...
+                    </div>
+                  ) : (
+                    'Apply Filters'
+                  )}
+                </button>
+                
+                <button
+                  onClick={clearAllFilters}
+                  className="w-full bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 px-4 py-2 rounded-lg font-medium transition-all duration-200"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+
             {/* Chart Type Selector */}
-            <div className="bento-card mt-6">
+            <div className="bento-card">
               <h3 className="text-lg font-semibold mb-4">Chart Type</h3>
               <div className="grid grid-cols-2 gap-2">
                 {chartTypes.map((type) => (
@@ -298,22 +511,56 @@ const DataExplorer = () => {
           >
             {selectedDataset && (
               <div className="space-y-6">
-                {/* Dataset Info */}
+                {/* Dataset Info with Filtering Status */}
                 <div className="bento-card">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold">{selectedDataset.name}</h2>
-                    <span className="text-sm text-slate-400">
-                      {selectedDataset.record_count.toLocaleString()} records
-                    </span>
+                    <div className="text-right">
+                      <div className="text-sm text-slate-400">
+                        {visualizationData?.total_count ? 
+                          `${visualizationData.returned_count} of ${visualizationData.total_count} records` :
+                          `${selectedDataset.record_count.toLocaleString()} total records`
+                        }
+                      </div>
+                      {(selectedStates.length > 0 || selectedYears.length > 0 || selectedCrimeTypes.length > 0) && (
+                        <div className="text-xs text-blue-400 mt-1">
+                          🔍 Filters Applied
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <p className="text-slate-300">{selectedDataset.description}</p>
+                  
+                  {/* Filter Summary */}
+                  {(selectedStates.length > 0 || selectedYears.length > 0 || selectedCrimeTypes.length > 0) && (
+                    <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                      <h4 className="text-sm font-medium text-blue-300 mb-2">Active Filters:</h4>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        {selectedStates.length > 0 && (
+                          <span className="bg-green-900/30 text-green-300 px-2 py-1 rounded">
+                            States: {selectedStates.length}
+                          </span>
+                        )}
+                        {selectedYears.length > 0 && (
+                          <span className="bg-purple-900/30 text-purple-300 px-2 py-1 rounded">
+                            Years: {selectedYears.length}
+                          </span>
+                        )}
+                        {selectedCrimeTypes.length > 0 && (
+                          <span className="bg-red-900/30 text-red-300 px-2 py-1 rounded">
+                            Crime Types: {selectedCrimeTypes.length}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Visualization */}
                 <div className="bento-card">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-semibold">Visualization</h3>
-                    {loading && (
+                    {(loading || isFiltering) && (
                       <div className="loading-dots">
                         <span></span>
                         <span></span>
@@ -322,7 +569,7 @@ const DataExplorer = () => {
                     )}
                   </div>
                   
-                  {visualizationData && visualizationData.data ? (
+                  {visualizationData && visualizationData.data && visualizationData.data.length > 0 ? (
                     <div className="h-96">
                       <ChartComponent
                         data={visualizationData.data}
@@ -334,65 +581,120 @@ const DataExplorer = () => {
                     <div className="flex items-center justify-center h-96 text-slate-400">
                       <div className="text-center">
                         <div className="text-4xl mb-4">📊</div>
-                        <div>No visualization data available</div>
+                        <div>
+                          {isFiltering ? 'Loading filtered data...' : 
+                           (selectedStates.length > 0 || selectedYears.length > 0 || selectedCrimeTypes.length > 0) ?
+                           'No data matches your filters' : 'No visualization data available'}
+                        </div>
+                        {(selectedStates.length > 0 || selectedYears.length > 0 || selectedCrimeTypes.length > 0) && (
+                          <button
+                            onClick={clearAllFilters}
+                            className="mt-2 text-blue-400 hover:text-blue-300 text-sm underline"
+                          >
+                            Clear filters to see all data
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* AI Insights */}
+                {/* Enhanced AI Insights */}
                 {insights && (
                   <div className="bento-card">
                     <h3 className="text-xl font-semibold mb-4 flex items-center">
                       <span className="mr-2">🤖</span>
-                      AI Insights
+                      Enhanced AI Insights
                     </h3>
                     
                     <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
-                      <p className="text-slate-300">{insights.insights.insight}</p>
+                      <p className="text-slate-300">
+                        {insights.insights?.insight || insights.insights}
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Enhanced Insights Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                       <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
                         <h4 className="font-semibold text-blue-300 mb-2">Chart Type</h4>
                         <p className="text-sm text-slate-300 capitalize">
-                          {insights.insights.chart_type || 'Bar Chart'}
+                          {insights.insights?.chart_type || 'Bar Chart'}
                         </p>
                       </div>
                       
                       <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
                         <h4 className="font-semibold text-purple-300 mb-2">Trend</h4>
                         <p className="text-sm text-slate-300 capitalize">
-                          {insights.insights.trend || 'Stable'}
+                          {insights.insights?.trend || 'Stable'}
                         </p>
                       </div>
                       
                       <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
                         <h4 className="font-semibold text-green-300 mb-2">Sample Size</h4>
                         <p className="text-sm text-slate-300">
-                          {insights.sample_size} records analyzed
+                          {insights.sample_size || insights.analyzed_sample} records analyzed
                         </p>
                       </div>
                     </div>
 
-                    {insights.insights.key_metrics && insights.insights.key_metrics.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="font-semibold mb-2">Key Metrics</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {insights.insights.key_metrics.map((metric, index) => (
-                            <span
-                              key={index}
-                              className="bg-cyan-900/20 text-cyan-300 px-3 py-1 rounded-full text-sm border border-cyan-500/30"
-                            >
-                              {metric}
-                            </span>
-                          ))}
+                    {/* Key Findings */}
+                    {insights.insights?.key_findings && insights.insights.key_findings.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-semibold mb-2">🔍 Key Findings</h4>
+                        <div className="bg-slate-700/30 rounded-lg p-3">
+                          <ul className="text-sm text-slate-300 space-y-1">
+                            {insights.insights.key_findings.map((finding, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-cyan-400 mr-2">•</span>
+                                {finding}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     )}
 
-                    {insights.insights.anomalies && insights.insights.anomalies.length > 0 && (
-                      <div className="mt-4 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+                    {/* Recommendations */}
+                    {insights.insights?.recommendations && insights.insights.recommendations.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-semibold mb-2">💡 Recommendations</h4>
+                        <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-3">
+                          <ul className="text-sm text-orange-200 space-y-1">
+                            {insights.insights.recommendations.map((rec, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-orange-400 mr-2">→</span>
+                                {rec}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* State Comparison & Temporal Analysis */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {insights.insights?.comparison_insights && (
+                        <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-4">
+                          <h4 className="font-semibold text-cyan-300 mb-2">🗺️ State Comparison</h4>
+                          <p className="text-sm text-cyan-200">
+                            {insights.insights.comparison_insights}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {insights.insights?.temporal_analysis && (
+                        <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-lg p-4">
+                          <h4 className="font-semibold text-indigo-300 mb-2">📈 Temporal Analysis</h4>
+                          <p className="text-sm text-indigo-200">
+                            {insights.insights.temporal_analysis}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Anomalies */}
+                    {insights.insights?.anomalies && insights.insights.anomalies.length > 0 && (
+                      <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
                         <h4 className="font-semibold text-red-300 mb-2">⚠️ Anomalies Detected</h4>
                         <ul className="text-sm text-red-200 space-y-1">
                           {insights.insights.anomalies.map((anomaly, index) => (
