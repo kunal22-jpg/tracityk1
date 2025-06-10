@@ -376,8 +376,10 @@ async def get_available_datasets():
                     description = "COVID-19 statistics and trends data"
                 elif "crime" in collection_name.lower():
                     description = "Crime statistics and safety data"
-                elif "education" in collection_name.lower():
+                elif "education" in collection_name.lower() or "literacy" in collection_name.lower():
                     description = "Education and literacy statistics"
+                elif "aqi" in collection_name.lower():
+                    description = "Air Quality Index measurements"
                 
                 datasets.append(DatasetInfo(
                     name=collection_name.replace('_', ' ').title(),
@@ -391,6 +393,127 @@ async def get_available_datasets():
     except Exception as e:
         logging.error(f"Error getting datasets: {e}")
         return []
+
+@api_router.get("/metadata/{collection_name}")
+async def get_dataset_metadata(collection_name: str):
+    """Get metadata for a specific collection including available filters"""
+    try:
+        metadata = await get_collection_metadata(collection_name)
+        return metadata
+    except Exception as e:
+        logging.error(f"Error getting metadata for {collection_name}: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving dataset metadata")
+
+@api_router.post("/data/filtered")
+async def get_filtered_data(filter_request: FilterRequest):
+    """Get filtered data from a collection with advanced filtering options"""
+    try:
+        # Verify collection exists
+        collections = await db.list_collection_names()
+        if filter_request.collection not in collections:
+            raise HTTPException(status_code=404, detail="Collection not found")
+        
+        # Build query
+        query = await build_filter_query(filter_request)
+        
+        # Build sort criteria
+        sort_criteria = []
+        if filter_request.sort_by:
+            sort_direction = 1 if filter_request.sort_order == "asc" else -1
+            sort_criteria.append((filter_request.sort_by, sort_direction))
+        
+        # Execute query
+        cursor = db[filter_request.collection].find(query)
+        if sort_criteria:
+            cursor = cursor.sort(sort_criteria)
+        
+        data = await cursor.limit(filter_request.limit or 100).to_list(filter_request.limit or 100)
+        
+        # Process data for frontend
+        processed_data = []
+        for doc in data:
+            clean_doc = {k: v for k, v in doc.items() if k != '_id'}
+            # Convert datetime objects to strings
+            for key, value in clean_doc.items():
+                if isinstance(value, datetime):
+                    clean_doc[key] = value.isoformat()
+            processed_data.append(clean_doc)
+        
+        # Get total count for the query
+        total_count = await db[filter_request.collection].count_documents(query)
+        
+        # Get chart recommendations
+        chart_rec = await get_chart_recommendations(processed_data)
+        
+        return {
+            "collection": filter_request.collection,
+            "data": processed_data,
+            "total_count": total_count,
+            "returned_count": len(processed_data),
+            "chart_recommendations": chart_rec,
+            "applied_filters": {
+                "states": filter_request.states,
+                "years": filter_request.years,
+                "crime_types": filter_request.crime_types,
+                "sort_by": filter_request.sort_by,
+                "sort_order": filter_request.sort_order
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Filtered data error: {e}")
+        raise HTTPException(status_code=500, detail="Error processing filtered data request")
+
+@api_router.post("/insights/enhanced")
+async def get_enhanced_insights(filter_request: FilterRequest):
+    """Get enhanced AI insights for filtered data"""
+    try:
+        # Get filtered data first
+        query = await build_filter_query(filter_request)
+        data = await db[filter_request.collection].find(query).limit(50).to_list(50)
+        
+        if not data:
+            raise HTTPException(status_code=404, detail="No data found for the specified filters")
+        
+        # Process data
+        processed_data = []
+        for doc in data:
+            clean_doc = {k: v for k, v in doc.items() if k != '_id'}
+            for key, value in clean_doc.items():
+                if isinstance(value, datetime):
+                    clean_doc[key] = value.isoformat()
+            processed_data.append(clean_doc)
+        
+        # Generate enhanced insights
+        insights = await get_enhanced_web_insights(
+            processed_data, 
+            filter_request.collection, 
+            f"Analyze patterns in {filter_request.collection} data"
+        )
+        
+        # Get total count for context
+        total_count = await db[filter_request.collection].count_documents(query)
+        
+        return {
+            "collection": filter_request.collection,
+            "total_records": total_count,
+            "analyzed_sample": len(processed_data),
+            "insights": insights,
+            "applied_filters": {
+                "states": filter_request.states,
+                "years": filter_request.years,
+                "crime_types": filter_request.crime_types
+            },
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Enhanced insights error: {e}")
+        raise HTTPException(status_code=500, detail="Error generating enhanced insights")
 
 @api_router.post("/chat")
 async def chat_with_ai(query: ChatQuery):
