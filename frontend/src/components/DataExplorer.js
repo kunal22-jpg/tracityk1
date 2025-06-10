@@ -9,10 +9,26 @@ const DataExplorer = () => {
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chartType, setChartType] = useState('bar');
+  
+  // New state for filtering
+  const [metadata, setMetadata] = useState(null);
+  const [selectedStates, setSelectedStates] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [selectedCrimeTypes, setSelectedCrimeTypes] = useState([]);
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [showAllStates, setShowAllStates] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   useEffect(() => {
     fetchDatasets();
   }, []);
+
+  useEffect(() => {
+    if (selectedDataset) {
+      fetchMetadata(selectedDataset.collection);
+    }
+  }, [selectedDataset]);
 
   const fetchDatasets = async () => {
     try {
@@ -32,11 +48,44 @@ const DataExplorer = () => {
     }
   };
 
-  const fetchVisualizationData = async (collection) => {
-    setLoading(true);
+  const fetchMetadata = async (collection) => {
     try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/metadata/${collection}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMetadata(data);
+        // Reset filters when changing datasets
+        setSelectedStates([]);
+        setSelectedYears([]);
+        setSelectedCrimeTypes([]);
+        setSortBy('');
+      }
+    } catch (error) {
+      console.error('Error fetching metadata:', error);
+    }
+  };
+
+  const fetchVisualizationData = async (collection, useFilters = false) => {
+    setIsFiltering(useFilters);
+    try {
+      let url = `${process.env.REACT_APP_BACKEND_URL}/api/visualize/${collection}`;
+      
+      if (useFilters && (selectedStates.length > 0 || selectedYears.length > 0)) {
+        const params = new URLSearchParams();
+        if (selectedStates.length > 0) {
+          params.append('states', selectedStates.join(','));
+        }
+        if (selectedYears.length > 0) {
+          params.append('years', selectedYears.join(','));
+        }
+        params.append('limit', showAllStates ? '200' : '50');
+        url += `?${params.toString()}`;
+      } else if (showAllStates) {
+        url += '?limit=200';
+      }
+
       const [vizResponse, insightsResponse] = await Promise.all([
-        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/visualize/${collection}`),
+        fetch(url),
         fetch(`${process.env.REACT_APP_BACKEND_URL}/api/insights/${collection}`)
       ]);
 
@@ -52,17 +101,102 @@ const DataExplorer = () => {
       }
     } catch (error) {
       console.error('Error fetching visualization data:', error);
-      // Set default data to prevent infinite loading
       setVisualizationData({ data: [], chart_recommendations: { recommended: 'bar' } });
       setInsights({ insights: { insight: 'Unable to load insights at this time.' } });
     } finally {
-      setLoading(false);
+      setIsFiltering(false);
+    }
+  };
+
+  const fetchFilteredData = async () => {
+    if (!selectedDataset) return;
+    
+    setIsFiltering(true);
+    try {
+      const filterRequest = {
+        collection: selectedDataset.collection,
+        states: selectedStates.length > 0 ? selectedStates : null,
+        years: selectedYears.length > 0 ? selectedYears : null,
+        crime_types: selectedCrimeTypes.length > 0 ? selectedCrimeTypes : null,
+        sort_by: sortBy || null,
+        sort_order: sortOrder,
+        limit: showAllStates ? 200 : 100
+      };
+
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/data/filtered`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filterRequest)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setVisualizationData({
+          ...data,
+          ai_insights: visualizationData?.ai_insights // Keep existing insights
+        });
+
+        // Fetch enhanced insights for filtered data
+        const insightsResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/insights/enhanced`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(filterRequest)
+        });
+
+        if (insightsResponse.ok) {
+          const insightsData = await insightsResponse.json();
+          setInsights(insightsData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching filtered data:', error);
+    } finally {
+      setIsFiltering(false);
     }
   };
 
   const handleDatasetChange = (dataset) => {
     setSelectedDataset(dataset);
     fetchVisualizationData(dataset.collection);
+  };
+
+  const handleStateToggle = (state) => {
+    setSelectedStates(prev => 
+      prev.includes(state) 
+        ? prev.filter(s => s !== state)
+        : [...prev, state]
+    );
+  };
+
+  const handleYearToggle = (year) => {
+    setSelectedYears(prev => 
+      prev.includes(year) 
+        ? prev.filter(y => y !== year)
+        : [...prev, year]
+    );
+  };
+
+  const handleCrimeTypeToggle = (crimeType) => {
+    setSelectedCrimeTypes(prev => 
+      prev.includes(crimeType) 
+        ? prev.filter(c => c !== crimeType)
+        : [...prev, crimeType]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setSelectedStates([]);
+    setSelectedYears([]);
+    setSelectedCrimeTypes([]);
+    setSortBy('');
+    setSortOrder('asc');
+    if (selectedDataset) {
+      fetchVisualizationData(selectedDataset.collection, false);
+    }
   };
 
   const chartTypes = [
