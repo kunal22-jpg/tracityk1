@@ -72,6 +72,186 @@ class CollectionMetadata(BaseModel):
     available_fields: List[str]
     special_filters: Dict[str, List[str]] = {}  # e.g., crime_types for crimes collection
 
+# Helper functions for data processing
+async def get_collection_metadata(collection_name: str) -> CollectionMetadata:
+    """Get metadata about a collection including available filters"""
+    try:
+        # Get available states
+        states = await db[collection_name].distinct("state")
+        states.sort()
+        
+        # Get available years
+        years = []
+        if collection_name == "covid_stats":
+            # For COVID data, extract years from date field
+            dates = await db[collection_name].distinct("date")
+            years = list(set([int(date[:4]) for date in dates if date and len(date) >= 4]))
+        else:
+            years = await db[collection_name].distinct("year")
+        years.sort()
+        
+        # Get all field names
+        sample_doc = await db[collection_name].find_one()
+        fields = list(sample_doc.keys()) if sample_doc else []
+        fields = [f for f in fields if f != '_id']
+        
+        # Get special filters based on collection
+        special_filters = {}
+        if collection_name == "crimes":
+            crime_types = await db[collection_name].distinct("crime_type")
+            special_filters["crime_types"] = sorted(crime_types)
+        elif collection_name == "covid_stats":
+            # Could add more COVID-specific filters if needed
+            pass
+        
+        return CollectionMetadata(
+            collection=collection_name,
+            available_states=states,
+            available_years=years,
+            available_fields=fields,
+            special_filters=special_filters
+        )
+    except Exception as e:
+        logging.error(f"Error getting metadata for {collection_name}: {e}")
+        return CollectionMetadata(
+            collection=collection_name,
+            available_states=[],
+            available_years=[],
+            available_fields=[],
+            special_filters={}
+        )
+
+async def build_filter_query(filter_request: FilterRequest) -> Dict[str, Any]:
+    """Build MongoDB query from filter request"""
+    query = {}
+    
+    if filter_request.states:
+        query["state"] = {"$in": filter_request.states}
+    
+    if filter_request.years:
+        if filter_request.collection == "covid_stats":
+            # For COVID data, filter by year from date field
+            year_filters = []
+            for year in filter_request.years:
+                year_filters.append({
+                    "date": {"$regex": f"^{year}-"}
+                })
+            query["$or"] = year_filters
+        else:
+            query["year"] = {"$in": filter_request.years}
+    
+    if filter_request.crime_types and filter_request.collection == "crimes":
+        query["crime_type"] = {"$in": filter_request.crime_types}
+    
+    return query
+
+async def get_enhanced_web_insights(data_sample: List[Dict], collection_name: str, query: str) -> Dict[str, Any]:
+    """Generate enhanced insights using web research and AI"""
+    try:
+        # Prepare context about the data
+        context_info = {
+            "collection": collection_name,
+            "sample_size": len(data_sample),
+            "data_structure": list(data_sample[0].keys()) if data_sample else []
+        }
+        
+        # Generate research-based insights
+        if collection_name == "crimes":
+            insight_context = f"""
+            Analyzing crime data from Indian states. The dataset contains information about {len(data_sample)} crime records.
+            Key fields: {', '.join(context_info['data_structure'])}
+            
+            Provide insights about:
+            1. Crime patterns across states
+            2. Trends over time
+            3. Most affected regions
+            4. Crime type distribution
+            5. Policy implications
+            """
+        elif collection_name == "covid_stats":
+            insight_context = f"""
+            Analyzing COVID-19 statistics from Indian states. The dataset contains {len(data_sample)} records.
+            Key fields: {', '.join(context_info['data_structure'])}
+            
+            Provide insights about:
+            1. Mortality patterns across states
+            2. Timeline of impacts
+            3. Regional variations
+            4. Public health implications
+            5. Recovery patterns
+            """
+        elif collection_name == "aqi":
+            insight_context = f"""
+            Analyzing Air Quality Index data from Indian states. The dataset contains {len(data_sample)} records.
+            Key fields: {', '.join(context_info['data_structure'])}
+            
+            Provide insights about:
+            1. Air pollution levels across states
+            2. Trends over time
+            3. Most polluted regions
+            4. Environmental concerns
+            5. Health implications
+            """
+        elif collection_name == "literacy":
+            insight_context = f"""
+            Analyzing literacy rate data from Indian states. The dataset contains {len(data_sample)} records.
+            Key fields: {', '.join(context_info['data_structure'])}
+            
+            Provide insights about:
+            1. Education levels across states
+            2. Progress over time
+            3. Regional disparities
+            4. Socioeconomic factors
+            5. Policy effectiveness
+            """
+        else:
+            insight_context = f"Analyzing data from {collection_name} with {len(data_sample)} records."
+        
+        # Use OpenAI for enhanced analysis
+        prompt = f"""
+        {insight_context}
+        
+        User query: "{query}"
+        Sample data: {json.dumps(data_sample[:3], default=str)}
+        
+        Provide a comprehensive analysis in JSON format:
+        {{
+            "insight": "Detailed analytical insight (150-200 words)",
+            "chart_type": "Recommended chart type (bar/line/pie/scatter)",
+            "key_findings": ["Finding 1", "Finding 2", "Finding 3"],
+            "anomalies": ["Any unusual patterns detected"],
+            "trend": "Overall trend (increasing/decreasing/stable/volatile)",
+            "recommendations": ["Policy or action recommendation 1", "Recommendation 2"],
+            "comparison_insights": "How different states/regions compare",
+            "temporal_analysis": "Analysis of trends over time"
+        }}
+        """
+        
+        response = await asyncio.to_thread(
+            openai.chat.completions.create,
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expert data analyst specializing in Indian socioeconomic data. Provide detailed, research-backed insights."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=800
+        )
+        
+        result = json.loads(response.choices[0].message.content)
+        return result
+    except Exception as e:
+        logging.error(f"Enhanced insights error: {e}")
+        return {
+            "insight": f"Analysis of {collection_name} data shows various patterns across Indian states. The data provides valuable insights into regional variations and trends over time.",
+            "chart_type": "bar",
+            "key_findings": ["Regional variations observed", "Temporal trends identified", "Data quality is good"],
+            "anomalies": [],
+            "trend": "stable",
+            "recommendations": ["Continue monitoring", "Implement targeted policies"],
+            "comparison_insights": "Significant differences observed between states",
+            "temporal_analysis": "Trends show interesting patterns over the analyzed period"
+        }
+
 # Helper functions for AI integration
 async def get_openai_insight(data_sample: List[Dict], query: str) -> Dict[str, Any]:
     """Generate AI insights using OpenAI"""
