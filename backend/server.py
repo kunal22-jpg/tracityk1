@@ -56,6 +56,22 @@ class StatsResponse(BaseModel):
     total_datasets: int
     total_insights: int
 
+class FilterRequest(BaseModel):
+    collection: str
+    states: Optional[List[str]] = None
+    years: Optional[List[int]] = None
+    crime_types: Optional[List[str]] = None
+    sort_by: Optional[str] = None
+    sort_order: Optional[str] = "asc"  # asc or desc
+    limit: Optional[int] = 100
+
+class CollectionMetadata(BaseModel):
+    collection: str
+    available_states: List[str]
+    available_years: List[int]
+    available_fields: List[str]
+    special_filters: Dict[str, List[str]] = {}  # e.g., crime_types for crimes collection
+
 # Helper functions for AI integration
 async def get_openai_insight(data_sample: List[Dict], query: str) -> Dict[str, Any]:
     """Generate AI insights using OpenAI"""
