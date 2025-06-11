@@ -4,7 +4,7 @@ import sys
 import json
 from datetime import datetime
 
-class DataNovaAPITester:
+class TRACITYAPITester:
     def __init__(self, base_url):
         self.base_url = base_url
         self.tests_run = 0
@@ -81,12 +81,12 @@ class DataNovaAPITester:
                         print(f"  Error: {result['error']}")
         print("="*50)
 
-class TestDataNovaAPI(unittest.TestCase):
+class TestTRACITYAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Get the backend URL from the environment variable
         cls.base_url = "https://8b443549-36dd-4b15-a654-5647592c7f32.preview.emergentagent.com/api"
-        cls.tester = DataNovaAPITester(cls.base_url)
+        cls.tester = TRACITYAPITester(cls.base_url)
         print(f"Testing API at: {cls.base_url}")
         
         # Collections to test
@@ -104,6 +104,8 @@ class TestDataNovaAPI(unittest.TestCase):
         if success:
             data = response.json()
             self.assertIn("message", data)
+            # Verify the updated branding message
+            self.assertEqual(data["message"], "TRACITY API - Your AI Data Companion")
             print(f"Response: {data}")
 
     def test_02_stats_endpoint(self):
@@ -572,6 +574,23 @@ class TestDataNovaAPI(unittest.TestCase):
                     self.assertIn("insights", data)
                     self.assertIn("applied_filters", data)
                     self.assertEqual(data["applied_filters"]["years"], [test_year])
+
+    def test_10_verify_fastapi_title(self):
+        """Test the FastAPI title by checking the OpenAPI schema"""
+        success, response = self.tester.run_test(
+            "OpenAPI Schema",
+            "GET",
+            "openapi.json",
+            200
+        )
+        self.assertTrue(success)
+        if success:
+            data = response.json()
+            self.assertIn("info", data)
+            self.assertIn("title", data["info"])
+            # Verify the FastAPI title is "TRACITY API"
+            self.assertEqual(data["info"]["title"], "TRACITY API")
+            print(f"FastAPI Title: {data['info']['title']}")
 
     @classmethod
     def tearDownClass(cls):
