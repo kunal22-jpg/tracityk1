@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
-import Dashboard from './components/Dashboard';
+import TracityDashboard from './components/TracityDashboard';
 import DataExplorer from './components/DataExplorer';
-import Navbar from './components/Navbar';
+import TracityNavbar from './components/TracityNavbar';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
