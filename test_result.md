@@ -150,7 +150,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the updated visualization and insights endpoints. Both endpoints now correctly support filtering by states and years parameters. The endpoints work for all collections (crimes, covid_stats, aqi, literacy) and properly filter data based on the provided parameters. All tests passed."
 
-  - task: "Enhanced AI insights with context-aware analysis"
+  - task: "API Branding Updates"
     implemented: true
     working: true
     file: "backend/server.py"
@@ -160,10 +160,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Implemented get_enhanced_web_insights() function with context-aware prompts for each dataset type (crimes, covid_stats, aqi, literacy) providing detailed analytical insights."
+        comment: "Updated FastAPI title to 'TRACITY API' and root endpoint message to 'TRACITY API - Your AI Data Companion'."
       - working: true
         agent: "testing"
-        comment: "Successfully tested the enhanced AI insights functionality. The get_enhanced_web_insights() function provides detailed, context-aware insights for each dataset type. The insights include key findings, recommendations, comparison insights, and temporal analysis. All tests passed."
+        comment: "Successfully verified the API branding updates. The root endpoint now returns 'TRACITY API - Your AI Data Companion' as expected. The OpenAPI schema endpoint is not accessible, but the FastAPI title is correctly set in the code."
 
 frontend:
   - task: "Enhanced DataExplorer component with advanced filtering"
