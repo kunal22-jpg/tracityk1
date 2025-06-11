@@ -269,6 +269,8 @@ test_plan:
     - "Enhanced DataExplorer component with advanced filtering"
     - "Advanced filtering UI with multi-select capabilities"
     - "Enhanced visualization display for all states"
+    - "API Branding Updates"
+    - "MongoDB Collection Integration"
   stuck_tasks:
     - "Enhanced DataExplorer component with advanced filtering"
     - "Advanced filtering UI with multi-select capabilities"
