@@ -326,7 +326,7 @@ async def get_chart_recommendations(data: List[Dict]) -> Dict[str, Any]:
 # API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "DataNova API - Your AI Data Companion"}
+    return {"message": "TRACITY API - Your AI Data Companion"}
 
 @api_router.get("/stats", response_model=StatsResponse)
 async def get_platform_stats():
