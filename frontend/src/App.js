@@ -39,9 +39,9 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <div className="min-h-screen bg-slate-900 text-slate-100">
-          <Navbar />
+          <TracityNavbar />
           <Routes>
-            <Route path="/" element={<Dashboard stats={stats} />} />
+            <Route path="/" element={<TracityDashboard stats={stats} />} />
             <Route path="/explorer" element={<DataExplorer />} />
           </Routes>
         </div>
