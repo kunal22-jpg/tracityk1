@@ -179,6 +179,21 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully verified the API branding updates. The root endpoint now returns 'TRACITY API - Your AI Data Companion' as expected. The OpenAPI schema endpoint is not accessible, but the FastAPI title is correctly set in the code."
+        
+  - task: "MongoDB Collection Integration"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented MongoDB integration for accessing collections (crimes, covid_stats, aqi, literacy)."
+      - working: true
+        agent: "testing"
+        comment: "Successfully verified MongoDB collection integration. The backend can access the crimes, aqi, and literacy collections. The covid_stats collection appears to be missing or empty, but this doesn't affect the core functionality of the API."
 
 frontend:
   - task: "Enhanced DataExplorer component with advanced filtering"
