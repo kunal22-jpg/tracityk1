@@ -27,7 +27,7 @@ db = client["world_data"]  # Using the world_data database as specified
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 
 # Create the main app
-app = FastAPI(title="DataNova API", description="AI-Powered Data Visualization Platform")
+app = FastAPI(title="TRACITY API", description="AI-Powered Data Visualization Platform")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
