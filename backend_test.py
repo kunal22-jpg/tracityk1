@@ -85,7 +85,7 @@ class TestDataNovaAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Get the backend URL from the environment variable
-        cls.base_url = "https://5075570e-643b-4872-b8be-95c0b32faa4c.preview.emergentagent.com/api"
+        cls.base_url = "https://8b443549-36dd-4b15-a654-5647592c7f32.preview.emergentagent.com/api"
         cls.tester = DataNovaAPITester(cls.base_url)
         print(f"Testing API at: {cls.base_url}")
         
