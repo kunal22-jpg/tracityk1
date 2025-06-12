@@ -79,9 +79,45 @@ const DataExplorer = () => {
         setSelectedYears([]);
         setSelectedCrimeTypes([]);
         setSortBy('');
+      } else {
+        console.error('Error fetching metadata: Server returned', response.status);
+        // Set default metadata if the API fails
+        const defaultMetadata = {
+          available_states: [
+            'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+            'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+            'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+            'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+            'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+            'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir'
+          ],
+          available_years: ['2018', '2019', '2020', '2021', '2022'],
+          available_fields: ['state', 'year', 'cases_reported'],
+          special_filters: collection === 'crimes' ? {
+            crime_types: ['Murder', 'Robbery', 'Theft', 'Assault', 'Fraud']
+          } : {}
+        };
+        setMetadata(defaultMetadata);
       }
     } catch (error) {
       console.error('Error fetching metadata:', error);
+      // Set default metadata if the API fails
+      const defaultMetadata = {
+        available_states: [
+          'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+          'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+          'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+          'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+          'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+          'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir'
+        ],
+        available_years: ['2018', '2019', '2020', '2021', '2022'],
+        available_fields: ['state', 'year', 'cases_reported'],
+        special_filters: collection === 'crimes' ? {
+          crime_types: ['Murder', 'Robbery', 'Theft', 'Assault', 'Fraud']
+        } : {}
+      };
+      setMetadata(defaultMetadata);
     }
   };
 
