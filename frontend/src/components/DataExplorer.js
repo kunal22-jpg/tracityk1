@@ -40,9 +40,29 @@ const DataExplorer = () => {
           setSelectedDataset(data[0]);
           await fetchVisualizationData(data[0].collection);
         }
+      } else {
+        console.error('Error fetching datasets: Server returned', response.status);
+        // Set some default datasets if the API fails
+        const defaultDatasets = [
+          { collection: 'crimes', name: 'Crimes', description: 'Crime statistics and safety data', record_count: 1500 },
+          { collection: 'aqi', name: 'AQI', description: 'Air Quality Index data', record_count: 300 },
+          { collection: 'literacy', name: 'Literacy', description: 'Literacy rate statistics', record_count: 300 }
+        ];
+        setDatasets(defaultDatasets);
+        setSelectedDataset(defaultDatasets[0]);
+        await fetchVisualizationData(defaultDatasets[0].collection);
       }
     } catch (error) {
       console.error('Error fetching datasets:', error);
+      // Set some default datasets if the API fails
+      const defaultDatasets = [
+        { collection: 'crimes', name: 'Crimes', description: 'Crime statistics and safety data', record_count: 1500 },
+        { collection: 'aqi', name: 'AQI', description: 'Air Quality Index data', record_count: 300 },
+        { collection: 'literacy', name: 'Literacy', description: 'Literacy rate statistics', record_count: 300 }
+      ];
+      setDatasets(defaultDatasets);
+      setSelectedDataset(defaultDatasets[0]);
+      await fetchVisualizationData(defaultDatasets[0].collection);
     } finally {
       setLoading(false);
     }
