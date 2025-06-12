@@ -190,6 +190,154 @@ class TestTRACITYAPI(unittest.TestCase):
                 
                 # Verify data is returned
                 self.assertIsInstance(result["data"], list)
+    
+    def test_04_datasets_endpoint(self):
+        """Test the datasets endpoint"""
+        success, response = self.tester.run_test(
+            "Available Datasets",
+            "GET",
+            "datasets",
+            200
+        )
+        self.assertTrue(success)
+        if success:
+            data = response.json()
+            self.assertIsInstance(data, list)
+            print(f"Found {len(data)} datasets")
+            
+            # Verify we have at least one dataset
+            self.assertGreater(len(data), 0)
+            
+            # Check dataset structure
+            if len(data) > 0:
+                dataset = data[0]
+                self.assertIn("name", dataset)
+                self.assertIn("collection", dataset)
+                self.assertIn("description", dataset)
+                self.assertIn("record_count", dataset)
+                self.assertIn("last_updated", dataset)
+                
+                # Verify dataset has records
+                self.assertIsInstance(dataset["record_count"], int)
+                self.assertGreater(dataset["record_count"], 0)
+                
+                print(f"Dataset: {dataset['name']}")
+                print(f"Collection: {dataset['collection']}")
+                print(f"Description: {dataset['description']}")
+                print(f"Record count: {dataset['record_count']}")
+    
+    def test_05_visualize_crimes_endpoint(self):
+        """Test the visualize/crimes endpoint"""
+        success, response = self.tester.run_test(
+            "Crimes Visualization Data",
+            "GET",
+            "visualize/crimes",
+            200
+        )
+        self.assertTrue(success)
+        if success:
+            data = response.json()
+            self.assertIn("collection", data)
+            self.assertIn("data", data)
+            self.assertIn("chart_recommendations", data)
+            self.assertIn("ai_insights", data)
+            self.assertIn("total_records", data)
+            self.assertIn("metadata", data)
+            
+            # Verify collection name
+            self.assertEqual(data["collection"], "crimes")
+            
+            # Verify data is returned
+            self.assertIsInstance(data["data"], list)
+            self.assertGreater(len(data["data"]), 0)
+            
+            # Verify chart recommendations
+            self.assertIn("recommended", data["chart_recommendations"])
+            self.assertIn("alternatives", data["chart_recommendations"])
+            
+            # Verify AI insights
+            self.assertIn("insight", data["ai_insights"])
+            self.assertTrue(data["ai_insights"]["insight"])
+            
+            print(f"Collection: {data['collection']}")
+            print(f"Records: {data['total_records']}")
+            print(f"Recommended chart: {data['chart_recommendations']['recommended']}")
+            print(f"AI insight: {data['ai_insights']['insight'][:100]}...")
+    
+    def test_06_insights_crimes_endpoint(self):
+        """Test the insights/crimes endpoint"""
+        success, response = self.tester.run_test(
+            "Crimes Insights",
+            "GET",
+            "insights/crimes",
+            200
+        )
+        self.assertTrue(success)
+        if success:
+            data = response.json()
+            self.assertIn("collection", data)
+            self.assertIn("total_records", data)
+            self.assertIn("insights", data)
+            self.assertIn("sample_size", data)
+            self.assertIn("metadata", data)
+            self.assertIn("applied_filters", data)
+            self.assertIn("generated_at", data)
+            
+            # Verify collection name
+            self.assertEqual(data["collection"], "crimes")
+            
+            # Verify insights
+            self.assertIn("insight", data["insights"])
+            self.assertIn("chart_type", data["insights"])
+            self.assertIn("key_findings", data["insights"])
+            
+            # Verify sample size
+            self.assertGreater(data["sample_size"], 0)
+            
+            print(f"Collection: {data['collection']}")
+            print(f"Total records: {data['total_records']}")
+            print(f"Sample size: {data['sample_size']}")
+            print(f"Insight: {data['insights']['insight'][:100]}...")
+            print(f"Chart type: {data['insights']['chart_type']}")
+            print(f"Key findings: {data['insights']['key_findings']}")
+    
+    def test_07_chat_endpoint_with_air_quality_query(self):
+        """Test the chat endpoint with an air quality query"""
+        test_query = "Analyze air quality data"
+        
+        success, response = self.tester.run_test(
+            f"AI Chat Query: '{test_query}'",
+            "POST",
+            "chat",
+            200,
+            data={"query": test_query}
+        )
+        self.assertTrue(success)
+        if success:
+            data = response.json()
+            self.assertIn("query", data)
+            self.assertIn("results", data)
+            self.assertIn("total_collections_searched", data)
+            
+            # Verify the query was processed correctly
+            self.assertEqual(data["query"], test_query)
+            
+            # Verify at least one result was returned
+            self.assertGreater(len(data["results"]), 0)
+            
+            # Check if any result is related to air quality
+            aqi_found = False
+            for result in data["results"]:
+                if "aqi" in result["collection"].lower():
+                    aqi_found = True
+                    print(f"Found AQI data in collection: {result['collection']}")
+                    print(f"Insight: {result['insight'][:100]}...")
+                    break
+            
+            # Note: This might not always be true depending on how the backend processes the query
+            # So we're not asserting it, just logging it
+            if not aqi_found:
+                print("Note: No specific AQI collection found in results, but query was processed")
 
     @classmethod
     def tearDownClass(cls):
