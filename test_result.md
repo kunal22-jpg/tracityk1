@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Enhanced Data Explorer with multi-state filtering, advanced AI insights, and proper visualization for all Indian states. The original issue was that data explorer only showed data for Andhra Pradesh instead of all states. Added comprehensive filtering by states, years, crime types, sorting options, and enhanced AI insights with web research capabilities."
+user_problem_statement: "Version 4.0.0 Update: Replace the main center animated orb with 3D Spline model, remove all bento grids from dashboard, center the 3D model as hero section, add day/night toggle for whole website, and ensure clicking 3D model opens AI chatbot. Complete minimalist redesign with TRACITY name in top-left and theme toggle in top-right."
 
 backend:
   - task: "API Branding Updates"
