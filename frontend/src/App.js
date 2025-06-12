@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import TracityDashboard from './components/TracityDashboard';
 import DataExplorer from './components/DataExplorer';
@@ -43,6 +43,8 @@ function App() {
           <Routes>
             <Route path="/" element={<TracityDashboard stats={stats} />} />
             <Route path="/explorer" element={<DataExplorer />} />
+            {/* Add a fallback route to handle any other paths */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </BrowserRouter>
