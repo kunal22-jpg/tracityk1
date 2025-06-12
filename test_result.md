@@ -175,7 +175,7 @@ frontend:
     file: "frontend/src/components/TracityNavbar.js, frontend/src/components/ChatPopup.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
