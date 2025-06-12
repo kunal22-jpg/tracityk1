@@ -2,6 +2,7 @@ import requests
 import unittest
 import sys
 import json
+import os
 from datetime import datetime
 
 class TRACITYAPITester:
@@ -18,6 +19,7 @@ class TRACITYAPITester:
         
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
+        print(f"URL: {url}")
         
         try:
             if method == 'GET':
@@ -42,14 +44,18 @@ class TRACITYAPITester:
                 if response.status_code != 204:  # No content
                     try:
                         result["response"] = response.json()
+                        print(f"Response: {json.dumps(response.json(), indent=2)[:500]}...")
                     except:
                         result["response"] = response.text
+                        print(f"Response: {response.text[:500]}...")
             else:
                 print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
                 try:
                     result["error"] = response.json()
+                    print(f"Error: {json.dumps(response.json(), indent=2)}")
                 except:
                     result["error"] = response.text
+                    print(f"Error: {response.text}")
             
             self.test_results.append(result)
             return success, response
@@ -84,8 +90,14 @@ class TRACITYAPITester:
 class TestTRACITYAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Get the backend URL from the environment variable
-        cls.base_url = "https://d8770fd2-ea1a-4668-ba76-7d5d99bcdac9.preview.emergentagent.com/api"
+        # Get the backend URL from the environment variable or use the one from frontend/.env
+        with open('/app/frontend/.env', 'r') as f:
+            for line in f:
+                if line.startswith('REACT_APP_BACKEND_URL='):
+                    backend_url = line.strip().split('=')[1].strip('"\'')
+                    break
+        
+        cls.base_url = f"{backend_url}/api"
         cls.tester = TRACITYAPITester(cls.base_url)
         print(f"Testing API at: {cls.base_url}")
         
